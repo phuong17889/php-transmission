@@ -77,7 +77,7 @@ $transmission->reannounce($torrent);
 ```
 
 To find out which information is contained by the torrent, check
-[`tuoiteen\transmission\models\Torrent`](https://github.com/tuoiteen/transmission-php/tree/master/src/transmission/models/Torrent.php).
+[`tuoiteen\transmission\models\Torrent`](https://github.com/tuoiteen/transmission-php/tree/master/src/models/Torrent.php).
 
 By default, the library will try to connect to `localhost:9091`. If you want to
 connect to another host or post you can pass those to the constructor of the
