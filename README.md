@@ -15,7 +15,7 @@ Installation is easy using [Composer](https://getcomposer.org):
 ```json
 {
     "require": {
-        "kleiram/transmission-php": "dev-master"
+        "tuoiteen/transmission-php": "dev-master"
     }
 }
 ```
@@ -26,7 +26,7 @@ Using the library is as easy as installing it:
 
 ```php
 <?php
-use Transmission\Transmission;
+use tuoiteen\transmission\Transmission;
 
 $transmission = new Transmission();
 
@@ -77,7 +77,7 @@ $transmission->reannounce($torrent);
 ```
 
 To find out which information is contained by the torrent, check
-[`Transmission\Model\Torrent`](https://github.com/kleiram/transmission-php/tree/master/lib/Transmission/Model/Torrent.php).
+[`tuoiteen\transmission\models\Torrent`](https://github.com/tuoiteen/transmission-php/tree/master/src/transmission/models/Torrent.php).
 
 By default, the library will try to connect to `localhost:9091`. If you want to
 connect to another host or post you can pass those to the constructor of the
@@ -85,7 +85,7 @@ connect to another host or post you can pass those to the constructor of the
 
 ```php
 <?php
-use Transmission\Transmission;
+use tuoiteen\transmission\Transmission;
 
 $transmission = new Transmission('example.com', 33);
 
@@ -110,8 +110,8 @@ authenticate using the `Client` class:
 
 ```php
 <?php
-use Transmission\Client;
-use Transmission\Transmission;
+use tuoiteen\transmission\Client;
+use tuoiteen\transmission\Transmission;
 
 $client = new Client();
 $client->authenticate('username', 'password');
@@ -124,7 +124,7 @@ you can modify the global download limit or change the download directory:
 
 ```php
 <?php
-use Transmission\Transmission;
+use tuoiteen\transmission\Transmission;
 
 $transmission = new Transmission();
 $session = $transmission->getSession();
