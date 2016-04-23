@@ -1,12 +1,12 @@
 <?php
-namespace tuoiteen\transmission;
+namespace phuong17889\transmission;
 
 use Buzz\Client\ClientInterface;
 use Buzz\Client\Curl;
 use Buzz\Message\Request;
 use Buzz\Message\Response;
 use Exception;
-use tuoiteen\exceptions\RuntimeException;
+use phuong17889\exceptions\RuntimeException;
 
 /**
  * The Client class is used to make API calls to the Transmission server

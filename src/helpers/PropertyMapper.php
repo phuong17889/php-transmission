@@ -1,9 +1,9 @@
 <?php
-namespace tuoiteen\transmission\helpers;
+namespace phuong17889\transmission\helpers;
 
 use Exception;
 use Symfony\Component\PropertyAccess\PropertyAccess;
-use tuoiteen\transmission\core\ModelInterface;
+use phuong17889\transmission\core\ModelInterface;
 
 /**
  * The PropertyMapper is used to map responses from Transmission to models

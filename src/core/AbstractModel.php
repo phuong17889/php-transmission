@@ -1,8 +1,8 @@
 <?php
-namespace tuoiteen\transmission\core;
+namespace phuong17889\transmission\core;
 
-use tuoiteen\transmission\Client;
-use tuoiteen\transmission\helpers\ResponseValidator;
+use phuong17889\transmission\Client;
+use phuong17889\transmission\helpers\ResponseValidator;
 
 /**
  * Base class for Transmission models

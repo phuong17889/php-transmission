@@ -1,5 +1,5 @@
 {
-	"name" : "lephuong/transmission-php",
+	"name" : "lephuong-org/transmission-php",
 	"description" : "PHP Transmission client",
 	"keywords" : [
 		"transmission",
@@ -24,7 +24,7 @@
 	},
 	"autoload" : {
 		"psr-4" : {
-			"tuoiteen\\transmission" : "src/"
+			"phuong17889\\transmission\\" : "src/"
 		}
 	}
 }

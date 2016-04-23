@@ -1,13 +1,13 @@
 <?php
-namespace tuoiteen\transmission;
+namespace phuong17889\transmission;
 
-use tuoiteen\exceptions\RuntimeException;
-use tuoiteen\transmission\helpers\PropertyMapper;
-use tuoiteen\transmission\helpers\ResponseValidator;
-use tuoiteen\transmission\models\FreeSpace;
-use tuoiteen\transmission\models\Session;
-use tuoiteen\transmission\models\Torrent;
-use tuoiteen\transmission\stats\Session as SessionStats;
+use phuong17889\exceptions\RuntimeException;
+use phuong17889\transmission\helpers\PropertyMapper;
+use phuong17889\transmission\helpers\ResponseValidator;
+use phuong17889\transmission\models\FreeSpace;
+use phuong17889\transmission\models\Session;
+use phuong17889\transmission\models\Torrent;
+use phuong17889\transmission\stats\Session as SessionStats;
 
 /**
  * @author Ramon Kleiss <ramon@cubilon.nl>

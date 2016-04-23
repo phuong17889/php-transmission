@@ -1,5 +1,5 @@
 <?php
-namespace tuoiteen\transmission\core;
+namespace phuong17889\transmission\core;
 /**
  * The interface Transmission models must implement
  *

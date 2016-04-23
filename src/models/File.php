@@ -1,7 +1,7 @@
 <?php
-namespace tuoiteen\transmission\models;
+namespace phuong17889\transmission\models;
 
-use tuoiteen\transmission\core\AbstractModel;
+use phuong17889\transmission\core\AbstractModel;
 
 /**
  * @author Ramon Kleiss <ramon@cubilon.nl>

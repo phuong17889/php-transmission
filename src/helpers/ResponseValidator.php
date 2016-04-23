@@ -1,8 +1,8 @@
 <?php
-namespace tuoiteen\transmission\helpers;
+namespace phuong17889\transmission\helpers;
 
 use RuntimeException;
-use tuoiteen\transmission\core\Object;
+use phuong17889\transmission\core\Object;
 
 /**
  * @author Ramon Kleiss <ramon@cubilon.nl>

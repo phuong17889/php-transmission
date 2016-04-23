@@ -1,9 +1,9 @@
 <?php
-namespace tuoiteen\transmission\models;
+namespace phuong17889\transmission\models;
 
 use Exception;
-use tuoiteen\transmission\core\AbstractModel;
-use tuoiteen\transmission\helpers\PropertyMapper;
+use phuong17889\transmission\core\AbstractModel;
+use phuong17889\transmission\helpers\PropertyMapper;
 
 /**
  * @author Ramon Kleiss <ramon@cubilon.nl>

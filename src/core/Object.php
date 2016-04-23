@@ -7,7 +7,7 @@
  * @date    4/23/2016
  * @time    12:36 AM
  */
-namespace tuoiteen\transmission\core;
+namespace phuong17889\transmission\core;
 use stdClass;
 
 /**

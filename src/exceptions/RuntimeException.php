@@ -1,5 +1,5 @@
 <?php
-namespace tuoiteen\exceptions;
+namespace phuong17889\exceptions;
 
 use Exception;
 

@@ -15,7 +15,7 @@ Installation is easy using [Composer](https://getcomposer.org):
 ```json
 {
     "require": {
-        "tuoiteen/transmission-php": "dev-master"
+        "phuong17889/transmission-php": "dev-master"
     }
 }
 ```
@@ -26,7 +26,7 @@ Using the library is as easy as installing it:
 
 ```php
 <?php
-use tuoiteen\transmission\Transmission;
+use phuong17889\transmission\Transmission;
 
 $transmission = new Transmission();
 
@@ -77,7 +77,7 @@ $transmission->reannounce($torrent);
 ```
 
 To find out which information is contained by the torrent, check
-[`tuoiteen\transmission\models\Torrent`](https://github.com/tuoiteen/transmission-php/tree/master/src/models/Torrent.php).
+[`phuong17889\transmission\models\Torrent`](https://github.com/phuong17889/transmission-php/tree/master/src/models/Torrent.php).
 
 By default, the library will try to connect to `localhost:9091`. If you want to
 connect to another host or post you can pass those to the constructor of the
@@ -85,7 +85,7 @@ connect to another host or post you can pass those to the constructor of the
 
 ```php
 <?php
-use tuoiteen\transmission\Transmission;
+use phuong17889\transmission\Transmission;
 
 $transmission = new Transmission('example.com', 33);
 
@@ -102,6 +102,8 @@ but the metadata must be base64-encoded:
 
 ```php
 <?php
+use phuong17889\transmission\Transmission;
+$transmission = new Transmission('example.com', 33);
 $torrent = $transmission->add(/* base64-encoded metainfo */, true);
 ```
 
@@ -110,8 +112,8 @@ authenticate using the `Client` class:
 
 ```php
 <?php
-use tuoiteen\transmission\Client;
-use tuoiteen\transmission\Transmission;
+use phuong17889\transmission\Client;
+use phuong17889\transmission\Transmission;
 
 $client = new Client();
 $client->authenticate('username', 'password');
@@ -124,7 +126,7 @@ you can modify the global download limit or change the download directory:
 
 ```php
 <?php
-use tuoiteen\transmission\Transmission;
+use phuong17889\transmission\Transmission;
 
 $transmission = new Transmission();
 $session = $transmission->getSession();

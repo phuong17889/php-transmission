@@ -1,7 +1,7 @@
 <?php
-namespace tuoiteen\transmission\stats;
+namespace phuong17889\transmission\stats;
 
-use tuoiteen\transmission\core\AbstractModel;
+use phuong17889\transmission\core\AbstractModel;
 
 /**
  * @author Joysen Chellem
