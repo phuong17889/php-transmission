@@ -6,7 +6,7 @@ use Buzz\Client\Curl;
 use Buzz\Message\Request;
 use Buzz\Message\Response;
 use Exception;
-use phuong17889\exceptions\RuntimeException;
+use phuong17889\transmission\exceptions\RuntimeException;
 
 /**
  * The Client class is used to make API calls to the Transmission server

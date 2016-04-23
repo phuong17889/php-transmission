@@ -4,6 +4,7 @@ namespace phuong17889\transmission\models;
 use Exception;
 use phuong17889\transmission\core\AbstractModel;
 use phuong17889\transmission\helpers\PropertyMapper;
+use phuong17889\transmission\helpers\ResponseValidator;
 
 /**
  * @author Ramon Kleiss <ramon@cubilon.nl>
@@ -63,7 +64,7 @@ class Torrent extends AbstractModel {
 	/**
 	 * @var array List of error occured
 	 */
-	static protected $errors = [];
+	protected static $errors = [];
 
 	public           $info;
 
@@ -488,6 +489,42 @@ class Torrent extends AbstractModel {
 	}
 
 	/**
+	 */
+	public function stop() {
+		$this->call('torrent-stop', array('ids' => array($this->getId())));
+	}
+
+	/**
+	 * @param boolean $now
+	 */
+	public function start($now = false) {
+		$this->call($now ? 'torrent-start-now' : 'torrent-start', array('ids' => array($this->getId())));
+	}
+
+	/**
+	 */
+	public function verify() {
+		$this->call('torrent-verify', array('ids' => array($this->getId())));
+	}
+
+	/**
+	 */
+	public function reAnnounce() {
+		$this->call('torrent-reannounce', array('ids' => array($this->getId())));
+	}
+
+	/**
+	 * @param boolean $localData
+	 */
+	public function remove($localData = false) {
+		$arguments = array('ids' => array($this->getId()));
+		if ($localData) {
+			$arguments['delete-local-data'] = true;
+		}
+		$this->call('torrent-remove', $arguments);
+	}
+
+	/**
 	 * {@inheritDoc}
 	 */
 	public static function getMapping() {
@@ -515,25 +552,33 @@ class Torrent extends AbstractModel {
 		);
 	}
 
-	public static function newInstance($data = null, $meta = array(), $piece_length = 256) {
+	/**
+	 * @param null  $data
+	 * @param array $meta
+	 * @param int   $piece_length
+	 *
+	 * @return mixed|Torrent
+	 */
+	public static function newInstance($data = null, $meta = [], $piece_length = 256) {
+		$torrent = new Torrent();
 		if (is_null($data)) {
-			return false;
+			return null;
 		}
 		if ($piece_length < 32 || $piece_length > 4096) {
 			return self::set_error(new Exception('Invalid piece length, must be between 32 and 4096'));
 		}
 		if (is_string($meta)) {
-			$meta = array('announce' => $meta);
+			$meta = ['announce' => $meta];
 		}
-		if (self::build($data, $piece_length * 1024)) {
-			self::touch();
+		if ($torrent->build($data, $piece_length * 1024)) {
+			$torrent->touch();
 		} else {
 			$meta = array_merge($meta, self::decode($data));
 		}
 		foreach ($meta as $key => $value) {
-			self::$key = $value;
+			$torrent->$key = $value;
 		}
-		return true;
+		return $torrent;
 	}
 
 	/** Convert the current Torrent instance in torrent format
@@ -810,7 +855,7 @@ class Torrent extends AbstractModel {
 	 *
 	 * @return string torrent encoded data
 	 */
-	static public function encode($mixed) {
+	public static function encode($mixed) {
 		switch (gettype($mixed)) {
 			case 'integer':
 			case 'double':
@@ -873,7 +918,7 @@ class Torrent extends AbstractModel {
 	 *
 	 * @return array decoded torrent data
 	 */
-	static protected function decode($string) {
+	protected static function decode($string) {
 		$data = is_file($string) || self::url_exists($string) ? self::file_get_contents($string) : $string;
 		return (array) self::decode_data($data);
 	}
@@ -1037,7 +1082,7 @@ class Torrent extends AbstractModel {
 	 *
 	 * @return boolean|string return false or error message if requested
 	 */
-	static protected function set_error($exception, $message = false) {
+	protected static function set_error($exception, $message = false) {
 		return (array_unshift(self::$errors, $exception) && $message) ? $exception->getMessage() : false;
 	}
 
@@ -1048,7 +1093,7 @@ class Torrent extends AbstractModel {
 	 *
 	 * @return array announce list (array of arrays)
 	 */
-	static protected function announce_list($announce, $merge = array()) {
+	protected static function announce_list($announce, $merge = array()) {
 		return array_map(create_function('$a', 'return (array) $a;'), array_merge((array) $announce, (array) $merge));
 	}
 
@@ -1058,7 +1103,7 @@ class Torrent extends AbstractModel {
 	 *
 	 * @return string first announce url
 	 */
-	static protected function first_announce($announce) {
+	protected static function first_announce($announce) {
 		while (is_array($announce)) {
 			$announce = reset($announce);
 		}
@@ -1071,7 +1116,7 @@ class Torrent extends AbstractModel {
 	 *
 	 * @return string packed data hash
 	 */
-	static protected function pack(& $data) {
+	protected static function pack(& $data) {
 		return pack('H*', sha1($data)) . ($data = null);
 	}
 
@@ -1082,7 +1127,7 @@ class Torrent extends AbstractModel {
 	 *
 	 * @return string real file path
 	 */
-	static protected function path($path, $folder) {
+	protected static function path($path, $folder) {
 		array_unshift($path, $folder);
 		return join(DIRECTORY_SEPARATOR, $path);
 	}
@@ -1093,7 +1138,7 @@ class Torrent extends AbstractModel {
 	 *
 	 * @return boolean is the array a list or not
 	 */
-	static protected function is_list($array) {
+	protected static function is_list($array) {
 		foreach (array_keys($array) as $key) {
 			if (!is_int($key)) {
 				return false;
@@ -1211,7 +1256,7 @@ class Torrent extends AbstractModel {
 	 *
 	 * @return string formated size in appropriate unit
 	 */
-	static public function format($size, $precision = 2) {
+	public static function format($size, $precision = 2) {
 		$units = array(
 			'octets',
 			'Ko',
@@ -1231,7 +1276,7 @@ class Torrent extends AbstractModel {
 	 *
 	 * @return double|boolean filesize or false if error
 	 */
-	static public function filesize($file) {
+	public static function filesize($file) {
 		if (is_file($file)) {
 			return (double) sprintf('%u', @filesize($file));
 		} else if ($content_length = preg_grep($pattern = '#^Content-Length:\s+(\d+)$#i', (array) @get_headers($file))) {
@@ -1247,7 +1292,7 @@ class Torrent extends AbstractModel {
 	 *
 	 * @return resource|boolean file handle or false if error
 	 */
-	static public function fopen($file, $size = null) {
+	public static function fopen($file, $size = null) {
 		if ((is_null($size) ? self::filesize($file) : $size) <= 2 * pow(1024, 3)) {
 			return fopen($file, 'r');
 		} elseif (PHP_OS != 'Linux') {
@@ -1265,7 +1310,7 @@ class Torrent extends AbstractModel {
 	 *
 	 * @return array directory content list
 	 */
-	static public function scandir($dir) {
+	public static function scandir($dir) {
 		$paths = array();
 		foreach (scandir($dir) as $item) {
 			if ($item != '.' && $item != '..') {
@@ -1285,7 +1330,7 @@ class Torrent extends AbstractModel {
 	 *
 	 * @return boolean does the url exist or not
 	 */
-	static public function url_exists($url) {
+	public static function url_exists($url) {
 		return preg_match('#^http(s)?://[a-z0-9-]+(.[a-z0-9-]+)*(:[0-9]+)?(/.*)?$#i', $url) ? (bool) preg_grep('#^HTTP/.*\s(200|304)\s#', (array) @get_headers($url)) : false;
 	}
 
@@ -1296,7 +1341,7 @@ class Torrent extends AbstractModel {
 	 *
 	 * @return boolean is the file a torrent or not
 	 */
-	static public function is_torrent($file, $timeout = self::timeout) {
+	public static function is_torrent($file, $timeout = self::timeout) {
 		return self::file_get_contents($file, $timeout, 0, 11) === 'd8:announce';
 	}
 
@@ -1309,7 +1354,7 @@ class Torrent extends AbstractModel {
 	 *
 	 * @return string|boolean file content or false if error
 	 */
-	static public function file_get_contents($file, $timeout = self::timeout, $offset = null, $length = null) {
+	public static function file_get_contents($file, $timeout = self::timeout, $offset = null, $length = null) {
 		if (is_file($file) || ini_get('allow_url_fopen')) {
 			$context = !is_file($file) && $timeout ? stream_context_create(array('http' => array('timeout' => $timeout))) : null;
 			return !is_null($offset) ? $length ? @file_get_contents($file, false, $context, $offset, $length) : @file_get_contents($file, false, $context, $offset) : @file_get_contents($file, false, $context);
@@ -1328,5 +1373,16 @@ class Torrent extends AbstractModel {
 		$size    = curl_getinfo($handle, CURLINFO_CONTENT_LENGTH_DOWNLOAD);
 		curl_close($handle);
 		return ($offset && $size == - 1) || ($length && $length != $size) ? $length ? substr($content, $offset, $length) : substr($content, $offset) : $content;
+	}
+
+	/**
+	 * @param string $method
+	 * @param array  $arguments
+	 */
+	protected function call($method, $arguments) {
+		if (!($client = $this->getClient())) {
+			return;
+		}
+		ResponseValidator::validate($method, $client->call($method, $arguments));
 	}
 }

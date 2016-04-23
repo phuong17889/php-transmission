@@ -1,7 +1,7 @@
 <?php
 namespace phuong17889\transmission;
 
-use phuong17889\exceptions\RuntimeException;
+use phuong17889\transmission\exceptions\RuntimeException;
 use phuong17889\transmission\helpers\PropertyMapper;
 use phuong17889\transmission\helpers\ResponseValidator;
 use phuong17889\transmission\models\FreeSpace;
@@ -45,7 +45,7 @@ class Transmission {
 	/**
 	 * Get all the torrents in the download queue
 	 *
-	 * @return array
+	 * @return Torrent[]
 	 */
 	public function all() {
 		$client   = $this->getClient();
@@ -115,15 +115,15 @@ class Transmission {
 	 * Add a torrent to the download queue
 	 *
 	 * @param  string  $torrent
-	 * @param  boolean $metainfo
-	 * @param  string  $savepath
+	 * @param  boolean $metaInfo
+	 * @param  string  $savePath
 	 *
 	 * @return Torrent
 	 */
-	public function add($torrent, $metainfo = false, $savepath = null) {
-		$parameters = array($metainfo ? 'metainfo' : 'filename' => $torrent);
-		if ($savepath !== null) {
-			$parameters['download-dir'] = (string) $savepath;
+	public function add($torrent, $metaInfo = false, $savePath = null) {
+		$parameters = array($metaInfo ? 'metainfo' : 'filename' => $torrent);
+		if ($savePath !== null) {
+			$parameters['download-dir'] = (string) $savePath;
 		}
 		$response = $this->getClient()->call('torrent-add', $parameters);
 		return $this->getMapper()->map(new Torrent($this->getClient()), $this->getValidator()->validate('torrent-add', $response));
@@ -158,11 +158,11 @@ class Transmission {
 	}
 
 	/**
-	 * Request a reannounce of a torrent
+	 * Request a re announce of a torrent
 	 *
 	 * @param Torrent $torrent
 	 */
-	public function reannounce(Torrent $torrent) {
+	public function reAnnounce(Torrent $torrent) {
 		$this->getClient()->call('torrent-reannounce', array('ids' => array($torrent->getId())));
 	}
 
@@ -170,6 +170,7 @@ class Transmission {
 	 * Remove a torrent from the download queue
 	 *
 	 * @param Torrent $torrent
+	 * @param bool    $localData
 	 */
 	public function remove(Torrent $torrent, $localData = false) {
 		$arguments = array('ids' => array($torrent->getId()));
