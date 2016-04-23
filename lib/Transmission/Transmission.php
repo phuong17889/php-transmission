@@ -46,7 +46,7 @@ class Transmission
     /**
      * Get all the torrents in the download queue
      *
-     * @return array
+     * @return Torrent[]
      */
     public function all()
     {
