@@ -54,7 +54,7 @@ class File extends AbstractModel
     }
 
     /**
-     * @param integer $size
+     * @param integer $completed
      */
     public function setCompleted($completed)
     {
@@ -87,5 +87,10 @@ class File extends AbstractModel
             'length' => 'size',
             'bytesCompleted' => 'completed'
         );
+    }
+
+    public function __toString()
+    {
+        return $this->name;
     }
 }

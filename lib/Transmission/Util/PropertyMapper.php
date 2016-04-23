@@ -1,6 +1,7 @@
 <?php
 namespace Transmission\Util;
 
+use Exception;
 use stdClass;
 use Transmission\Model\ModelInterface;
 use Symfony\Component\PropertyAccess\PropertyAccess;
@@ -13,13 +14,13 @@ use Symfony\Component\PropertyAccess\PropertyAccess;
 class PropertyMapper
 {
     /**
-     * @param ModelInterface $model
-     * @param stdClass      $dto
+     * @param  ModelInterface $model
+     * @param  stdClass       $dto
      * @return ModelInterface
      */
     public static function map(ModelInterface $model, $dto)
     {
-        $accessor = PropertyAccess::getPropertyAccessor();
+        $accessor = PropertyAccess::createPropertyAccessor();
 
         $mapping  = array_filter($model->getMapping(), function ($value) {
             return !is_null($value);
@@ -32,7 +33,7 @@ class PropertyMapper
                     $dest,
                     $accessor->getValue($dto, $source)
                 );
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 continue;
             }
         }

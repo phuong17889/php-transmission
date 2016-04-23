@@ -38,17 +38,17 @@ class Client
     /**
      * @var string
      */
-    protected $host;
+    protected $host = self::DEFAULT_HOST;
 
     /**
      * @var integer
      */
-    protected $port;
+    protected $port = self::DEFAULT_PORT;
 
     /**
      * @var string
      */
-    protected $path;
+    protected $path = self::DEFAULT_PATH;
 
     /**
      * @var string
@@ -56,7 +56,7 @@ class Client
     protected $token;
 
     /**
-     * @var \Buzz\Client\ClientInterface
+     * @var ClientInterface
      */
     protected $client;
 
@@ -74,11 +74,12 @@ class Client
      */
     public function __construct($host = null, $port = null, $path = null)
     {
-        $this->setHost($host ?: self::DEFAULT_HOST);
-        $this->setPort($port ?: self::DEFAULT_PORT);
-        $this->setPath($path ?: self::DEFAULT_PATH);
-        $this->setToken(null);
-        $this->setClient(new Curl());
+        $this->token    = null;
+        $this->client   = new Curl();
+
+        if ($host) $this->setHost($host);
+        if ($port) $this->setPort($port);
+        if ($path) $this->setPath($path);
     }
 
     /**
@@ -102,16 +103,7 @@ class Client
      */
     public function call($method, array $arguments)
     {
-        $request = new Request('POST', $this->getPath(), $this->getUrl());
-        $response = new Response();
-        $content = array('method' => $method, 'arguments' => $arguments);
-
-        $request->addHeader(sprintf('%s: %s', self::TOKEN_HEADER, $this->getToken()));
-        $request->setContent(json_encode($content));
-
-        if (is_string($this->auth)) {
-            $request->addHeader(sprintf('Authorization: Basic %s', $this->auth));
-        }
+        list($request, $response) = $this->compose($method, $arguments);
 
         try {
             $this->getClient()->send($request, $response);
@@ -123,23 +115,7 @@ class Client
             );
         }
 
-        if ($response->getStatusCode() != 200 &&
-            $response->getStatusCode() != 401 &&
-            $response->getStatusCode() != 409) {
-            throw new RuntimeException('Unexpected response received from Transmission');
-        }
-
-        if ($response->getStatusCode() == 401) {
-            throw new RuntimeException('Access to Transmission requires authentication');
-        }
-
-        if ($response->getStatusCode() == 409) {
-            $this->setToken($response->getHeader(self::TOKEN_HEADER));
-
-            return $this->call($method, $arguments);
-        }
-
-        return json_decode($response->getContent());
+        return $this->validateResponse($response, $method, $arguments);
     }
 
     /**
@@ -239,7 +215,7 @@ class Client
     /**
      * Set the Buzz client used to connect to Transmission
      *
-     * @param \Buzz\Client\ClientInterface $client
+     * @param ClientInterface $client
      */
     public function setClient(ClientInterface $client)
     {
@@ -249,10 +225,58 @@ class Client
     /**
      * Get the Buzz client used to connect to Transmission
      *
-     * @return \Buzz\Client\ClientInterface
+     * @return ClientInterface
      */
     public function getClient()
     {
         return $this->client;
+    }
+
+    /**
+     * @param string $method
+     * @param array  $arguments
+     *
+     * @return Request|Response
+     */
+    protected function compose($method, $arguments)
+    {
+        $request = new Request('POST', $this->getPath(), $this->getUrl());
+        $request->addHeader(sprintf('%s: %s', self::TOKEN_HEADER, $this->getToken()));
+        $request->setContent(json_encode(array(
+            'method'    => $method,
+            'arguments' => $arguments
+        )));
+
+        if (is_string($this->auth)) {
+            $request->addHeader(sprintf('Authorization: Basic %s', $this->auth));
+        }
+
+        return array($request, new Response());
+    }
+
+    /**
+     * @param  Response $response
+     * @param  string   $method
+     * @param  array    $arguments
+     * @return stdClass
+     * @throws RuntimeException
+     */
+    protected function validateResponse($response, $method, $arguments)
+    {
+        if (!in_array($response->getStatusCode(), array(200, 401, 409))) {
+            throw new RuntimeException('Unexpected response received from Transmission');
+        }
+
+        if ($response->getStatusCode() == 401) {
+            throw new RuntimeException('Access to Transmission requires authentication');
+        }
+
+        if ($response->getStatusCode() == 409) {
+            $this->setToken($response->getHeader(self::TOKEN_HEADER));
+
+            return $this->call($method, $arguments);
+        }
+
+        return json_decode($response->getContent());
     }
 }

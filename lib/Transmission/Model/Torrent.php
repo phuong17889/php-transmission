@@ -70,7 +70,7 @@ class Torrent extends AbstractModel
     protected $hash;
 
     /**
-     * @var integer
+     * @var integer|Status
      */
     protected $status;
 
@@ -82,12 +82,22 @@ class Torrent extends AbstractModel
     /**
      * @var integer
      */
+    protected $startDate;
+    
+    /**
+     * @var integer
+     */
     protected $uploadRate;
 
     /**
      * @var integer
      */
     protected $downloadRate;
+
+    /**
+     * @var integer
+     */
+    protected $peersConnected;
 
     /**
      * @var double
@@ -108,6 +118,31 @@ class Torrent extends AbstractModel
      * @var array
      */
     protected $trackers = array();
+
+    /**
+     * @var array
+     */
+    protected $trackerStats = array();
+
+    /**
+     * @var double
+     */
+    protected $uploadRatio;
+    
+    /**
+     * @var string
+     */
+    protected $downloadDir;
+
+    /**
+     * @var integer
+     */
+    protected $downloadedEver;
+
+    /**
+     * @var integer
+     */
+    protected $uploadedEver;
 
     /**
      * @param integer $id
@@ -222,6 +257,21 @@ class Torrent extends AbstractModel
     }
 
     /**
+     * @var integer $startDate
+     */
+    public function setStartDate($startDate)
+    {
+        $this->startDate = (integer) $startDate;
+    }
+
+    /**
+     * @return integer
+     */
+    public function getStartDate()
+    {
+        return $this->startDate;
+    }
+    /**
      * @var integer $rate
      */
     public function setUploadRate($rate)
@@ -243,6 +293,22 @@ class Torrent extends AbstractModel
     public function setDownloadRate($rate)
     {
         $this->downloadRate = (integer) $rate;
+    }
+
+    /**
+     * @param integer $peersConnected
+     */
+    public function setPeersConnected($peersConnected)
+    {
+        $this->peersConnected = (integer) $peersConnected;
+    }
+
+    /**
+     * @return integer
+     */
+    public function getPeersConnected()
+    {
+        return $this->peersConnected;
     }
 
     /**
@@ -274,11 +340,9 @@ class Torrent extends AbstractModel
      */
     public function setFiles(array $files)
     {
-        $this->files = array();
-
-        foreach ($files as $file) {
-            $this->files[] = PropertyMapper::map(new File(), $file);
-        }
+        $this->files = array_map(function ($file) {
+            return PropertyMapper::map(new File(), $file);
+        }, $files);
     }
 
     /**
@@ -294,11 +358,9 @@ class Torrent extends AbstractModel
      */
     public function setPeers(array $peers)
     {
-        $this->peers = array();
-
-        foreach ($peers as $peer) {
-            $this->peers[] = PropertyMapper::map(new Peer(), $peer);
-        }
+        $this->peers = array_map(function ($peer) {
+            return PropertyMapper::map(new Peer(), $peer);
+        }, $peers);
     }
 
     /**
@@ -308,17 +370,32 @@ class Torrent extends AbstractModel
     {
         return $this->peers;
     }
+    /**
+     * @param array $trackerStats
+     */
+    public function setTrackerStats(array $trackerStats)
+    {
+        $this->trackerStats = array_map(function ($trackerStats) {
+            return PropertyMapper::map(new TrackerStats(), $trackerStats);
+        }, $trackerStats);
+    }
+
+    /**
+     * @return array
+     */
+    public function getTrackerStats()
+    {
+        return $this->trackerStats;
+    }
 
     /**
      * @param array $trackers
      */
     public function setTrackers(array $trackers)
     {
-        $this->trackers = array();
-
-        foreach ($trackers as $tracker) {
-            $this->trackers[] = PropertyMapper::map(new Tracker(), $tracker);
-        }
+        $this->trackers = array_map(function ($tracker) {
+            return PropertyMapper::map(new Tracker(), $tracker);
+        }, $trackers);
     }
 
     /**
@@ -330,11 +407,27 @@ class Torrent extends AbstractModel
     }
 
     /**
+     * @param double $ratio
+     */
+    public function setUploadRatio($ratio)
+    {
+        $this->uploadRatio = (double) $ratio;
+    }
+
+    /**
+     * @return double
+     */
+    public function getUploadRatio()
+    {
+        return $this->uploadRatio;
+    }
+
+    /**
      * @return boolean
      */
     public function isStopped()
     {
-        return $this->getStatus() == self::STATUS_STOPPED;
+        return $this->status->isStopped();
     }
 
     /**
@@ -342,8 +435,7 @@ class Torrent extends AbstractModel
      */
     public function isChecking()
     {
-        return ($this->getStatus() == self::STATUS_CHECK ||
-                $this->getStatus() == self::STATUS_CHECK_WAIT);
+        return $this->status->isChecking();
     }
 
     /**
@@ -351,8 +443,7 @@ class Torrent extends AbstractModel
      */
     public function isDownloading()
     {
-        return ($this->getStatus() == self::STATUS_DOWNLOAD ||
-                $this->getStatus() == self::STATUS_DOWNLOAD_WAIT);
+        return $this->status->isDownloading();
     }
 
     /**
@@ -360,8 +451,7 @@ class Torrent extends AbstractModel
      */
     public function isSeeding()
     {
-        return ($this->getStatus() == self::STATUS_SEED ||
-                $this->getStatus() == self::STATUS_SEED_WAIT);
+        return $this->status->isSeeding();
     }
 
     /**
@@ -418,6 +508,49 @@ class Torrent extends AbstractModel
 
         $this->call('torrent-remove', $arguments);
     }
+    
+    /**
+     */
+    public function getDownloadDir()
+    {
+        return $this->downloadDir;
+    }
+
+    /**
+     * @param string $downloadDir
+     */
+    public function setDownloadDir($downloadDir)
+    {
+        $this->downloadDir = $downloadDir;
+    }
+
+    /**
+     * @return int
+     */
+    public function getDownloadedEver() {
+        return $this->downloadedEver;
+    }
+
+    /**
+     * @param int $downloadedEver
+     */
+    public function setDownloadedEver($downloadedEver) {
+        $this->downloadedEver = $downloadedEver;
+    }
+
+    /**
+     * @return int
+     */
+    public function getUploadedEver() {
+        return $this->uploadedEver;
+    }
+
+    /**
+     * @param int $uploadedEver
+     */
+    public function setUploadedEver($uploadedEver) {
+        $this->uploadedEver = $uploadedEver;
+    }
 
     /**
      * {@inheritDoc}
@@ -436,8 +569,15 @@ class Torrent extends AbstractModel
             'percentDone' => 'percentDone',
             'files' => 'files',
             'peers' => 'peers',
+            'peersConnected' => 'peersConnected',
             'trackers' => 'trackers',
-            'hashString' => 'hash'
+            'trackerStats' => 'trackerStats',
+            'startDate' => 'startDate',
+            'uploadRatio' => 'uploadRatio',
+            'hashString' => 'hash',
+            'downloadDir' => 'downloadDir',
+            'downloadedEver' => 'downloadedEver',
+            'uploadedEver' => 'uploadedEver'
         );
     }
 

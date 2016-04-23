@@ -4,6 +4,8 @@ namespace Transmission;
 use RuntimeException;
 use Transmission\Model\Torrent;
 use Transmission\Model\Session;
+use Transmission\Model\FreeSpace;
+use Transmission\Model\Stats\Session as SessionStats;
 use Transmission\Util\PropertyMapper;
 use Transmission\Util\ResponseValidator;
 
@@ -48,19 +50,19 @@ class Transmission
      */
     public function all()
     {
+        $client   = $this->getClient();
+        $mapper   = $this->getMapper();
         $response = $this->getClient()->call(
             'torrent-get',
             array('fields' => array_keys(Torrent::getMapping()))
         );
 
-        $torrents = array();
-
-        foreach ($this->getValidator()->validate('torrent-get', $response) as $t) {
-            $torrents[] = $this->getMapper()->map(
-                new Torrent($this->getClient()),
-                $t
+        $torrents = array_map(function ($data) use ($mapper, $client) {
+            return $mapper->map(
+                new Torrent($client),
+                $data
             );
-        }
+        }, $this->getValidator()->validate('torrent-get', $response));
 
         return $torrents;
     }
@@ -74,27 +76,21 @@ class Transmission
      */
     public function get($id)
     {
-        $response = $this->getClient()->call(
-            'torrent-get',
-            array(
-                'fields' => array_keys(Torrent::getMapping()),
-                'ids'    => array($id)
-            )
-        );
+        $client   = $this->getClient();
+        $mapper   = $this->getMapper();
+        $response = $this->getClient()->call('torrent-get', array(
+            'fields' => array_keys(Torrent::getMapping()),
+            'ids'    => array($id)
+        ));
 
-        $torrent = null;
-
-        foreach ($this->getValidator()->validate('torrent-get', $response) as $t) {
-            $torrent = $this->getMapper()->map(
-                new Torrent($this->getClient()),
-                $t
-            );
-        }
+        $torrent = array_reduce(
+            $this->getValidator()->validate('torrent-get', $response),
+            function ($torrent, $data) use ($mapper, $client) {
+                return $torrent ? $torrent : $mapper->map(new Torrent($client), $data);
+            });
 
         if (!$torrent instanceof Torrent) {
-            throw new RuntimeException(
-                sprintf("Torrent with ID %s not found", $id)
-            );
+            throw new \RuntimeException(sprintf("Torrent with ID %s not found", $id));
         }
 
         return $torrent;
@@ -105,7 +101,8 @@ class Transmission
      * 
      * @return Session
      */
-    public function getSession(){
+    public function getSession()
+    {
         $response = $this->getClient()->call(
             'session-get',
             array()
@@ -117,24 +114,136 @@ class Transmission
         );
     }
 
+    public function getSessionStats()
+    {
+        $response = $this->getClient()->call(
+            'session-stats',
+            array()
+        );
+
+        return $this->getMapper()->map(
+            new SessionStats(),
+            $this->getValidator()->validate('session-stats', $response)
+        );
+    }
+
+    /**
+     * Get Free space
+     * @param  string                       $path
+     * @return FreeSpace
+     */
+    public function getFreeSpace($path=null)
+    {
+        if (!$path) {
+            $path = $this->getSession()->getDownloadDir();
+        }
+        $response = $this->getClient()->call(
+            'free-space',
+            array('path'=>$path)
+        );
+
+        return $this->getMapper()->map(
+            new FreeSpace(),
+            $this->getValidator()->validate('free-space', $response)
+        );
+    }
+
     /**
      * Add a torrent to the download queue
      *
      * @param string  $torrent
      * @param boolean $metainfo
+     * @param null    $savepath
+     *
      * @return Torrent
      */
-    public function add($torrent, $metainfo = false)
+    public function add($torrent, $metainfo = false, $savepath = null)
     {
+        $parameters = array($metainfo ? 'metainfo' : 'filename' => $torrent);
+
+        if ($savepath !== null) {
+            $parameters['download-dir'] = (string) $savepath;
+        }
+
         $response = $this->getClient()->call(
             'torrent-add',
-            array($metainfo ? 'metainfo' : 'filename' => $torrent)
+            $parameters
         );
 
         return $this->getMapper()->map(
             new Torrent($this->getClient()),
             $this->getValidator()->validate('torrent-add', $response)
         );
+    }
+
+    /**
+     * Start the download of a torrent
+     *
+     * @param Torrent $torrent
+     * @param bool    $now
+     */
+    public function start(Torrent $torrent, $now = false)
+    {
+        $this->getClient()->call(
+            $now ? 'torrent-start-now' : 'torrent-start',
+            array('ids' => array($torrent->getId()))
+        );
+    }
+
+    /**
+     * Stop the download of a torrent
+     *
+     * @param Torrent $torrent
+     */
+    public function stop(Torrent $torrent)
+    {
+        $this->getClient()->call(
+            'torrent-stop',
+            array('ids' => array($torrent->getId()))
+        );
+    }
+
+    /**
+     * Verify the download of a torrent
+     *
+     * @param Torrent $torrent
+     */
+    public function verify(Torrent $torrent)
+    {
+        $this->getClient()->call(
+            'torrent-verify',
+            array('ids' => array($torrent->getId()))
+        );
+    }
+
+    /**
+     * Request a reannounce of a torrent
+     *
+     * @param Torrent $torrent
+     */
+    public function reannounce(Torrent $torrent)
+    {
+        $this->getClient()->call(
+            'torrent-reannounce',
+            array('ids' => array($torrent->getId()))
+        );
+    }
+
+    /**
+     * Remove a torrent from the download queue
+     *
+     * @param Torrent $torrent
+     * @param bool    $localData
+     */
+    public function remove(Torrent $torrent, $localData = false)
+    {
+        $arguments = array('ids' => array($torrent->getId()));
+
+        if ($localData) {
+            $arguments['delete-local-data'] = true;
+        }
+
+        $this->getClient()->call('torrent-remove', $arguments);
     }
 
     /**

@@ -1,5 +1,5 @@
 {
-	"name" : "phuong17889/transmission-php",
+	"name" : "phuong17889/php-transmission",
 	"description" : "PHP Transmission client",
 	"keywords" : [
 		"transmission",
@@ -23,8 +23,8 @@
 		"symfony/property-access" : "^2.2.1"
 	},
 	"autoload" : {
-		"psr-4" : {
-			"phuong17889\\transmission\\" : "src/"
+		"psr-0" : {
+			"Transmission" : "lib/"
 		}
 	}
 }
