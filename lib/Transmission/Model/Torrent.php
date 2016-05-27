@@ -83,7 +83,7 @@ class Torrent extends AbstractModel
      * @var integer
      */
     protected $startDate;
-    
+
     /**
      * @var integer
      */
@@ -128,7 +128,7 @@ class Torrent extends AbstractModel
      * @var double
      */
     protected $uploadRatio;
-    
+
     /**
      * @var string
      */
@@ -427,7 +427,11 @@ class Torrent extends AbstractModel
      */
     public function isStopped()
     {
-        return $this->status->isStopped();
+        if (is_int($this->status)) {
+            return $this->status == Status::STATUS_STOPPED;
+        } else {
+            return $this->status->isStopped();
+        }
     }
 
     /**
@@ -435,7 +439,11 @@ class Torrent extends AbstractModel
      */
     public function isChecking()
     {
-        return $this->status->isChecking();
+        if (is_int($this->status)) {
+            return $this->status == Status::STATUS_CHECK || $this->status == Status::STATUS_CHECK_WAIT;
+        } else {
+            return $this->status->isChecking();
+        }
     }
 
     /**
@@ -443,7 +451,11 @@ class Torrent extends AbstractModel
      */
     public function isDownloading()
     {
-        return $this->status->isDownloading();
+	    if (is_int($this->status)) {
+		    return ($this->status == self::STATUS_DOWNLOAD || $this->status == self::STATUS_DOWNLOAD_WAIT);
+	    } else {
+		    return $this->status->isDownloading();
+	    }
     }
 
     /**
@@ -451,7 +463,11 @@ class Torrent extends AbstractModel
      */
     public function isSeeding()
     {
-        return $this->status->isSeeding();
+	    if (is_int($this->status)) {
+		    return ($this->status == self::STATUS_SEED || $this->status == self::STATUS_SEED_WAIT);
+	    } else {
+		    return $this->status->isSeeding();
+	    }
     }
 
     /**
@@ -508,7 +524,7 @@ class Torrent extends AbstractModel
 
         $this->call('torrent-remove', $arguments);
     }
-    
+
     /**
      */
     public function getDownloadDir()
